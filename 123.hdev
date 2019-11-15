@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.1" halcon_version="12.0">
+<procedure name="main">
+<interface/>
+<body>
+<l>dev_close_window ()</l>
+<l>dev_update_window ('off')</l>
+<c></c>
+<l>read_image (raw_image, 'E:/TrainingSet/powder/给丘吉尔师弟的粉末图片/120A/12010032/2.bmp')</l>
+<l>get_image_size (raw_image, Width, Height)</l>
+<l>dev_open_window_fit_image (raw_image, 0, 0, Width / 1.5, Width / 1.5, WindowID)</l>
+<l>set_display_font (WindowID, 14, 'mono', 'true', 'false')</l>
+<c></c>
+<l>dev_set_line_width (3)</l>
+<l>dev_display (raw_image)</l>
+<l>stop ()</l>
+<c></c>
+<l>rgb1_to_gray (raw_image,gray_image)</l>
+<l>threshold(gray_image,ball_region,50,255)</l>
+<l>opening_circle (ball_region, RegionOpening, 1)</l>
+<l>gen_contour_region_xld (ball_region,ball_Contours, 'border')</l>
+<l>segment_contours_xld (ball_Contours, ContoursSplit, 'lines_circles', 10, 10, 10)</l>
+<l>count_obj (ContoursSplit, Number)</l>
+<l>dev_set_draw ('margin')</l>
+<l>dev_set_color ('red')</l>
+<l>dev_update_window ('off')</l>
+<c></c>
+<c></c>
+<l>gen_empty_obj (Circles)</l>
+<l>for i := 1 to Number by 1</l>
+<l>    select_obj (ContoursSplit, ObjectSelected, i)</l>
+<l>    get_contour_global_attrib_xld (ObjectSelected, 'cont_approx', Attrib)</l>
+<l>    if (Attrib == 1)</l>
+<l>        concat_obj (Circles, ObjectSelected, Circles)</l>
+<l>    elseif (Attrib == 0)</l>
+<l>        concat_obj (Circles, ObjectSelected, Circles)</l>
+<l>    endif</l>
+<l>endfor</l>
+<l>union_cocircular_contours_xld (Circles, UnionContours, rad(60), rad(10), rad(30), 100, 50, 10, 'true', 1)</l>
+<l>count_obj (UnionContours, NumberCircles)</l>
+<c></c>
+<l>radius_all := []</l>
+<l>CenterRow := []</l>
+<l>CenterColumn := []</l>
+<c></c>
+<l>J := 0</l>
+<l>for i := 1 to NumberCircles by 1</l>
+<l>    select_obj (UnionContours, ObjectSelected, i)</l>
+<l>    fit_circle_contour_xld (ObjectSelected, 'algebraic', -1, 0, 0, 3, 2, Row, Column, Radius, StartPhi, EndPhi, PointOrder)</l>
+<l>    gen_circle_contour_xld (ContCircle, Row, Column, Radius, 0, rad(360), 'positive', 1.5)</l>
+<c></c>
+<l>    if (i == 1)</l>
+<l>        Row2 := Row + Radius * sin(rad(-45))</l>
+<l>        Column2 := Column + Radius * cos(rad(-45))</l>
+<l>        set_tposition (WindowID, Row2 - 35, Column2 + 5)</l>
+<l>    endif</l>
+<l>    if (i &gt; 1)</l>
+<l>        exist := 0</l>
+<l>        for j := 0 to i - 2 by 1</l>
+<l>            distance_pp (Row, Column, CenterRow[j], CenterColumn[j], DistanceCenters)</l>
+<l>            if (DistanceCenters &lt; Radius)</l>
+<l>                exist := 1</l>
+<l>            endif</l>
+<l>        endfor</l>
+<l>        if (exist == 1)</l>
+<l>            Row2 := Row + Radius * sin(rad(-135))</l>
+<l>            Column2 := Column + Radius * cos(rad(-135))</l>
+<l>            set_tposition (WindowID, Row2 - 40, Column2 - 30)</l>
+<l>        else</l>
+<l>            if (Radius &gt; 20)</l>
+<l>                radius_all[J] :=Radius</l>
+<l>                J := J + 1</l>
+<l>                Row2 := Row + Radius * sin(rad(-45))</l>
+<l>                Column2 := Column + Radius * cos(rad(-45))</l>
+<l>                set_tposition (WindowID, Row2 - 35, Column2 + 5)</l>
+<l>                dev_display (ContCircle)</l>
+<l>                Radius := Radius$'.2f'</l>
+<l>                write_string (WindowID, Radius)</l>
+<l>                disp_arrow (WindowID, Row, Column, Row2, Column2, 2)</l>
+<l>            endif</l>
+<l>        endif</l>
+<l>    endif</l>
+<l>    CenterRow := [CenterRow,Row]</l>
+<l>    CenterColumn := [CenterColumn,Column]</l>
+<l>endfor</l>
+<c></c>
+<l>dev_set_color ('yellow')</l>
+<l>set_display_font (WindowID, 20, 'mono', 'true', 'false')</l>
+<l>msg :='Mean Radius:' + mean(radius_all)+'   STD:' + deviation(radius_all) + '   Number of Balls:' + (J + 1)</l>
+<l>msg1:='Max  Radius:' + max(radius_all)+'   Min  Radius:' + min(radius_all)</l>
+<l>set_tposition (WindowID, 100,100 )</l>
+<l>write_string (WindowID, msg)</l>
+<l>set_tposition (WindowID, 150,100 )</l>
+<l>write_string (WindowID, msg1)</l>
+<l>stop ()</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
